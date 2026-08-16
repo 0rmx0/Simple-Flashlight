@@ -186,11 +186,28 @@ internal fun MainScreenSlidersSection(
     }
 
     if (showStroboscopeBar) {
-        Slider(
-            modifier = sliderModifier,
-            value = stroboscopeBarValue,
-            onValueChange = onStroboscopeBarValueChange
-        )
+        val frequency = (stroboscopeBarValue * 149.5f + 0.5f).coerceIn(0.5f, 150f)
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "${frequency.toInt()} Hz",
+                color = SimpleTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            if (frequency >= 50f) {
+                Text(
+                    text = stringResource(id = com.simplemobiletools.flashlight.R.string.stroboscope_warning_high_freq),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            Slider(
+                modifier = sliderModifier,
+                value = stroboscopeBarValue,
+                onValueChange = onStroboscopeBarValueChange
+            )
+        }
     }
 
     if (!showBrightnessBar && !showStroboscopeBar) {

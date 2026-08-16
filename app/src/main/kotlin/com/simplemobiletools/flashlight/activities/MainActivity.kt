@@ -519,12 +519,20 @@ class MainActivity : ComponentActivity() {
 
         fun updateStroboscopeBarValue(newValue: Float) {
             _stroboscopeBarValue.value = newValue
-            val max = MAX_STROBO_DELAY
-            val min = MIN_STROBO_DELAY
-            val newLevel = MathUtils.lerp(min.toFloat(), max.toFloat(), 1 - newValue)
-            camera.stroboFrequency = newLevel.toLong()
-            preferences.stroboscopeFrequency = newLevel.toLong()
-            preferences.stroboscopeProgress = ((1 - newLevel) * MAX_STROBO_DELAY).toInt()
+            // Map slider (0..1) to frequency in Hz (0.5..150)
+            val frequencyHz = (newValue * 149.5f + 0.5f).coerceIn(0.5f, 150f)
+            val delayMs: Long = if (frequencyHz <= 0f) {
+                // effectively no stroboscope; use a very large delay to avoid rapid toggling
+                10_000_000L
+            } else {
+                // one flash cycle is on + off, so half period (ms) = 1000 / (2 * f)
+                (1000f / (2f * frequencyHz)).toLong().coerceAtLeast(1L)
+            }
+
+            camera.stroboFrequency = delayMs
+            preferences.stroboscopeFrequency = delayMs
+            // store a progress-like value for backward compatibility
+            preferences.stroboscopeProgress = (newValue * 1000f).toInt()
         }
 
         fun onResume() {
